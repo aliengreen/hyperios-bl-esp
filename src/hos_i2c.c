@@ -81,15 +81,6 @@ uint8_t HosI2CReadNACK(void)
 
 // ------------------------------------------------------------------
 
-void HosI2CWriteByte(uint8_t busAddr, uint8_t data) 
-{
-	HosI2CStart(busAddr); 
-	HosI2CWrite(data); 
-	HosI2CStop();
-}
-
-// ------------------------------------------------------------------
-
 void HosI2CStop()
 {
 	TWCR = HOS_TW_STOP;

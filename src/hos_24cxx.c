@@ -41,4 +41,3 @@ void Hos24cxxReadData( int address, unsigned char *data, int len )
 	HosI2CStop();
 }
 
-

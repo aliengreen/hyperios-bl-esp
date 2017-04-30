@@ -88,9 +88,9 @@ In `config.h` file you can configure MCU baud rate (please note we use UART0), o
 - `WIRELESS_RESET_*` WI-FI reset pin port configuration
 - `BUTTON_INPUT_*` onboard button pin port configuration
 - `LED_OUTPUT_*` onboard LED pinport configuration
+- `ALLOW_24CXX` enable or disable external EEPROM
 
-
-If you don't use WI-FI reset pin, please comment `#define WIRELESS_RESET_PORT` directive. Respectively for LED, please comment `#define LED_OUTPUT_PORT` directive.
+If you don't use WI-FI reset pin, please comment `#define WIRELESS_RESET_PORT` directive. Respectively for LED, please comment `#define LED_OUTPUT_PORT` directive. If you don't need to update firmware from external EEPROM just comment `#define ALLOW_24CXX` directive.
 
 > In most cases you don't need to change default baud rate `BAUDRATE   19200`, but make sure to configure your ESP8266 WI-FI module for `19200` baud rate in order to work correctly. 
 
@@ -134,6 +134,14 @@ If all goes well, you should see similar output:
 	up:
 	     [echo] Upload to '/dev/cu.usbmodem14511' device MCU family 'atmega328p' clock '8000000UL'
 
+## LED indicators
+
+The board has one LED located on the PCB board.
+
+- LED glow solid - the device are in DFU mode
+- LED flashes 3 times - onboard button was pushed and the device entered in DFU mode
+- LED flashes quickly - firmware upload in progress
+- LED flashes 5 times - firmware was update from external EEPROM
 
 Resources
 -----------

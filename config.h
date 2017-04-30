@@ -52,6 +52,9 @@
 #define LED_OUTPUT_PIN              PINC1        /* bit for 'Buzzer' for input/output */
 #define LED_OUTPUT_DDR              DDRC         /* 'Buzzer' data direction register */
 
+/* Using external EEPROM. If you don't need to update from EEPROM just comment */
+#define ALLOW_24CXX
+
 /* ------------------- END CONFIGURATION ------------------- */
 
 

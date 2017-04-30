@@ -82,7 +82,7 @@ void _HosLedBlink(uint8_t count) {
 }
 
 //------------------------------------------------------------------------------
-
+#if defined(ALLOW_24CXX)
 void _HosLoadProgramFromEEPROM(uint16_t start_page, uint16_t page_count)
 {
       uint16_t address = 0; 
@@ -97,6 +97,7 @@ void _HosLoadProgramFromEEPROM(uint16_t start_page, uint16_t page_count)
       }
       _HosLedBlink(5);
 }
+#endif
 
 //------------------------------------------------------------------------------
 
@@ -139,7 +140,7 @@ void HosInitDevice(void)
     WDTCSR  = 0x00; 
 
     /* Set 'Button' pin as digital input */
-    BUTTON_INPUT_DDR |= _BV(BUTTON_INPUT_PIN);   
+    BUTTON_INPUT_DDR  |= _BV(BUTTON_INPUT_PIN);   
 
 #if defined(WIRELESS_RESET_PORT) 
     /* Set 'Wireless' Reset pin as digital output */
@@ -207,7 +208,9 @@ int main(void)
     /* If bit is set start application otherwise start bootloader code */
     if(conf.flash_lock == BOOTLOADER_LOCK_VALUE) {
         asm volatile("jmp 0x0000" ::);
-    } else if(conf.flash_lock == BOOTLOADER_EEPROM_LOAD_VALUE) {
+    } 
+#if defined(ALLOW_24CXX)
+    else if(conf.flash_lock == BOOTLOADER_EEPROM_LOAD_VALUE) {
 
         _HosLoadProgramFromEEPROM(conf.eeprom_page_offset, conf.eeprom_page_count);
 
@@ -223,6 +226,7 @@ int main(void)
         _HosSaveConfig();
         asm volatile("jmp 0x0000" ::);
     }
+#endif
     
 dfu:
     LED_ON();
