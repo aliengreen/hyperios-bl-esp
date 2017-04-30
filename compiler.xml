@@ -1,0 +1,160 @@
+<!--	
+	compiler.xml
+
+	Copyright (c) 2008 CSIRO, Delft University of Technology.
+
+	This file is part of Darjeeling.
+	Darjeeling is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation, either version 3 of the License, or
+	(at your option) any later version.
+
+	Darjeeling is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with Darjeeling.  If not, see <http://www.gnu.org/licenses/>.
+-->
+<project name="compiler">
+
+	<!-- Get the absolute path to where this file (compiler.xml) is located. Will be something like [darjeeling home]/src/architecture/arm/ -->
+	<dirname property="compilerpath" file="${ant.file.compiler}"/>
+	
+	<!-- Include taskdefs, includes cpptasks and the infuser (although that's not used here) -->
+	<import file="./taskdefs.xml"/>
+
+	<!--
+	This macro can be used to compile C code. It's used in other build files, for instance to compile 
+	the native (written in C) part of libraries, to compile the VM, or to compile platform/config specific code.
+	-->
+	<macrodef name="platform-compile">
+		<attribute name="objectfiles"/>
+		<attribute name="outputdir"/>
+		<element name="compile-elements"/>
+		<sequential>
+			<mkdir dir="@{objectfiles}"/>
+			<mkdir dir="@{outputdir}"/>
+			<cc
+				name="gcc"
+				objdir="@{objectfiles}"
+				>
+				<compiler classname="net.sf.antcontrib.cpptasks.gcc.cross.GccCCompiler">
+					<compilerparam value="avr" name="target"/>
+					<compilerarg value="-mmcu=${mcu}"/>										
+					<compilerarg value="-Os"/>				
+					<compilerarg value="-DF_CPU=${f_cpu}"/>
+					<compilerarg value="-std=gnu99"/>		
+					<compilerarg value="-Wall"/>		
+					<compilerarg value="-gdwarf-2"/>		
+<!--
+					<compilerarg value="-funsigned-char"/>		
+					<compilerarg value="-funsigned-bitfields"/>		
+					<compilerarg value="-fpack-struct"/>		
+					<compilerarg value="-fshort-enums"/>	
+-->						
+<!--
+					<compilerarg value="-MD"/>		
+					<compilerarg value="-MP"/>		
+					<compilerarg value="-MT"/>
+					<compilerarg value="-MF o/$(@F).d"/>	
+-->	
+				</compiler>				
+				<compile-elements/>
+			</cc>
+		</sequential>
+	</macrodef>
+
+	<!--
+	This macro links a bunch of object files and libraries into an output file (usually .elf).
+	-->
+	<macrodef name="platform-link">
+		<attribute name="outputfile"/>
+		<attribute name="sectionstart"/>
+		<element name="link-elements"/>
+    
+		<sequential>
+		  <echo message="@{outputfile}" />
+			<cc	name="gcc"	outfile="@{outputfile}">
+				<linker classname="net.sf.antcontrib.cpptasks.gcc.cross.GccLinker">
+					<linkerparam value="avr" name="target"/>
+				  <linkerarg value="-mmcu=${mcu}"/>						  				
+					<linkerarg value="-Wl,--gc-sections"/>
+					<linkerarg value="-Wl,-Map=${configuration}-avr.map"/>
+					<linkerarg value="--section-start=.text=@{sectionstart}" />
+				</linker>
+				<link-elements/>
+			</cc>
+
+			<exec executable="avr-objcopy">
+				<arg line="-O ihex @{outputfile} -R .eeprom ${outputfiles}/${configuration}.hex"/>
+			</exec>
+			<exec executable="avr-objcopy">
+				<arg line="-O binary @{outputfile} ${outputfiles}/${configuration}.bin"/>
+			</exec>
+			<exec executable="avr-objcopy">
+				<arg line="-j .eeprom --set-section-flags=.eeprom=&#34;alloc,load&#34;	--change-section-lma .eeprom=0 -O ihex ${outputfiles}/${configuration}.elf ${outputfiles}/${configuration}.eep"/>
+			</exec>
+
+		</sequential>
+	</macrodef>
+	
+	<!--
+	The objcopy macro is used to turn data that needs to be included into the final binary into an elf file. 
+	On some configurations the infusion files that need to be loaded at init are packaged into an archive and then
+	linked statically into the final executable.
+	-->
+	<macrodef name="platform-objcopy">
+		<attribute name="inputfile"/>
+		<attribute name="outputfile"/>
+		<sequential>
+			<!--
+			<exec executable="arm-objcopy">
+				<arg line="-I binary -O elf32-arm @{inputfile} @{outputfile}"/>
+			</exec>
+			-->
+			<!-- compile the binary file to a .c file -->
+			<carray
+				src="@{inputfile}"
+				dest="temp.c"
+				arrayname="di_archive"
+			/>
+			<!-- compile -->
+			<cc
+				name="gcc"
+				objdir="."
+				>
+				<compiler classname="net.sf.antcontrib.cpptasks.gcc.cross.GccCCompiler">
+					<compilerparam value="avr" name="target"/>
+				    <compilerarg value="-mmcu=${mcu}"/>										
+					<compilerarg value="-Os"/>				
+					<compilerarg value="-DF_CPU=${f_cpu}"/>
+					<compilerarg value="-std=gnu99"/>
+					<compilerarg value="-Wall"/>		
+					<compilerarg value="-gdwarf-2"/>	
+
+<!--
+					<compilerarg value="-funsigned-char"/>		
+					<compilerarg value="-funsigned-bitfields"/>		
+					<compilerarg value="-fpack-struct"/>		
+					<compilerarg value="-fshort-enums"/>		
+-->
+					
+<!--
+					<compilerarg value="-MD"/>		
+					<compilerarg value="-MP"/>
+					<compilerarg value="-MT"/>
+					<compilerarg value="-MF o/$(@F).d"/>	
+-->	
+					
+				</compiler>
+				<fileset includes="temp.c" dir="."/>
+			</cc>
+			<exec executable="mv">
+				<arg line="temp.o @{outputfile}"/>
+			</exec>
+		</sequential>
+	</macrodef>
+
+</project>

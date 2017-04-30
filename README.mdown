@@ -1,0 +1,142 @@
+HyperiOS Wi-Fi Network Bootloader (ESP8266)
+========
+
+This is AVR MCU boot-loader for HyperiOS RTOS (HyperiOS you can find [here](https://github.com/lashad/hyperios-os)). The bootloader is just a normal AVR MCU application that is located in a special region of flash memory. 
+
+For getting firmware into the bootloader we using ESP8266 Wi-Fi communication channel. We implemented a simple custom protocol to upload firmware from Wi-Fi network.
+
+> Note: The bootloader can't update itself and applications almost never modify the bootloader, you will need an external programmer STK500, AVRISP to write the bootloader to the MCU.
+
+
+Before you upload bootloader always better to set the BOOTRST fuse to run the bootloader after reset. When the bootloader runs after reset, you can easily reprogram the application from network even when the application is totally broken or non-responsive. 
+
+## Basic features
+
+- Update firmware from WI-FI network
+- Update firmware from external EEPROM 24cXX
+- Onboard factory reset button
+- Onboard LED
+- Using internal EEPROM to store configuration
+- Supports unique device serial number EUI-64
+- Device boot count
+- Device lock bits
+- AVR MCUSR bits
+
+## How it works
+
+After device reset or first start the bootloader runs and waits 3 seconds to check onboard factory reset is pressed. The bootloader runs itself when a button is long-pressed (about 5-6 seconds) during reset. The next part is checking `flash_lock` bits, if `flash_lock` bit value is equal to `BOOTLOADER_LOCK_VALUE` the application starts normally, if `flash_lock` bit value is `BOOTLOADER_EEPROM_LOAD_VALUE` the firmware will be updated from external EEPROM and `BOOTLOADER_EEPROM_LOAD_COMPLETED_VALUE` will be stored in `flash_lock` bit.  if `flash_lock` bit value is `BOOTLOADER_EEPROM_RECOVERY_VALUE` the firmware will be updated from recovery section of external EEPROM and `BOOTLOADER_EEPROM_RECOVERY_COMPLETED_VALUE` will be stored in `flash_lock` bit. 
+
+The bootloader also counts number of boot value, it stores MCUSR flags for future use in the application (see `main.c` file for more information).
+
+> Note: Application starts immediately if onboard button is not pressed and `flash_lock` bit value is `BOOTLOADER_LOCK_VALUE` (see `config.h` for details).
+
+
+## Configuration
+
+Before you start, make sure you have the configuration
+
+### EEPROM Structure
+
+For storing configuration values we use AVR internal EEPROM memory. Configuration structure looks like:
+
+	struct _hos_config_perm
+	{
+	    uint8_t  mcusr;
+	    uint8_t  number_of_boot;
+	    uint8_t  flash_lock;
+	    
+	    uint16_t  eeprom_page_count;
+	    uint16_t  eeprom_page_offset;
+	
+	    uint16_t  eeprom_recovery_page_count;
+	    uint16_t  eeprom_recovery_page_offset;
+	
+	    uint8_t   euid64[BOOTLOADER_UUID_LENGTH];
+	    uint8_t   ssid[BOOTLOADER_SSID_LENGTH];
+	}
+
+
+- `mcusr` The AVR MCU Status Register provides information on which reset source caused an MCU reset.
+- `number_of_boot` Number of MCU booting. Max value is 255 then goes to zero and count again.
+- `flash_lock` bit can be one of the following values - `BOOTLOADER_LOCK_VALUE = 253`, `BOOTLOADER_EEPROM_LOAD_VALUE = 250`,`BOOTLOADER_EEPROM_LOAD_COMPLETED_VALUE = 249`,`BOOTLOADER_EEPROM_RECOVERY_VALUE = 248`,`BOOTLOADER_EEPROM_RECOVERY_COMPLETED_VALUE = 247`
+- `eeprom_page_count ` total page count of firmware image stored in external EEPROM section.
+- `eeprom_page_offset` offset of firmware image stored in external EEPROM section.
+- `eeprom_recovery_page_count ` total page count of recovery firmware image stored in external EEPROM section.
+- `eeprom_recovery_page_offset` offset of recovery firmware image stored in external EEPROM section.
+- `euid64` device serial number EUI-64
+- `ssid` WI-FI SSID name
+
+
+### build.xml
+
+For build script we use standard ant build file `build.xml`, here you can configure 3 parameters: MCU family, crystal frequency and bootloader section start address.
+
+    <property name="mcu" value="atmega328p"/>
+    <property name="f_cpu" value="8000000UL"/>
+    <property name="sectionstart" value="0x7000"/>
+
+- `mcu` property value can be `atmega328p` or `atmega1284p`
+- `f_cpu` property crystal frequency in Herz. e.g. 8Mhz crystal will be `8000000UL`
+- `sectionstart` property value boot flash section start address. We use 4kb bootloader size, for atmega328P this value will be `0x7000`
+
+
+### config.h
+
+In `config.h` file you can configure MCU baud rate (please note we use UART0), onboard button pin, onboard LED pin, ESP8266 WI-FI reset pin. You can not use any of these pins, except for the onboard button. Because without this bootloader will not work.
+
+- `BAUDRATE` default value is `19200`
+- `WIRELESS_RESET_*` WI-FI reset pin port configuration
+- `BUTTON_INPUT_*` onboard button pin port configuration
+- `LED_OUTPUT_*` onboard LED pinport configuration
+
+
+If you don't use WI-FI reset pin, please comment `#define WIRELESS_RESET_PORT` directive. Respectively for LED, please comment `#define LED_OUTPUT_PORT` directive.
+
+> In most cases you don't need to change default baud rate `BAUDRATE   19200`, but make sure to configure your ESP8266 WI-FI module for `19200` baud rate in order to work correctly. 
+
+
+## Build script commands
+
+* `ant all` -  build all source files in `src` directory and store compiled files in `bin` and `o` directories
+* `ant up` - upload `bootloader.hex` in connected device
+* `ant clean` - clean up everything (remove `bin` and `o` directories)
+* `ant fuses-r` - read AVR fuses from connected device
+
+Also, you can update AVR fuses by the following ant task:
+
+`ant fuses-w -Dl='0xe2' -Dh='0xd0' -De='0xfd'`
+
+fields show the actual hexadecimal representation of fuses, These are the values you have to program into your AVR device. Where:
+
+- `-Dl` is a LOW fuse in hexadecimal
+- `-Dh` is HIGH fuse in hexadecimal
+- `-De` is EXT fuse in hexadecimal
+
+> Note: Make sure to set the BOOTRST fuse bit to run the bootloader first after reset.
+
+For more information about FUSES calculator and actual values see [Engbedded Atmel AVR® Fuse Calculator](http://www.engbedded.com/fusecalc/)
+
+
+## Upload 
+
+For programming AVR micro-controllers you need AVR programmer STK500 or similar, next you will use the `avrdude` software to upload binary `.hex` file to the chip.
+
+Under MacOS X, we can use the Terminal program to pull up a command line interface. 
+
+First get your AVR target board ready to go. Connect your board to the USB programmer and run:
+
+`ant all up` 
+
+If all goes well, you should see similar output:
+	
+	Buildfile: /Users/..../MyProjects/hyperios-os/build.xml
+	
+	up:
+	     [echo] Upload to '/dev/cu.usbmodem14511' device MCU family 'atmega328p' clock '8000000UL'
+
+
+Resources
+-----------
+
+- [Engbedded Atmel AVR® Fuse Calculator](http://www.engbedded.com/fusecalc/)
+

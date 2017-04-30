@@ -1,0 +1,99 @@
+<project name="taskdefs">
+
+	<dirname property="taskdefspath" file="${ant.file.taskdefs}"/>
+
+	<!-- Task for compiling C  -->
+	<path id="cpptasks-classpath" path="./ant/cpptasks.jar"/>
+	<taskdef name="cc" classname="net.sf.antcontrib.cpptasks.CCTask" loaderRef="cctasks" classpathref="cpptasks-classpath"/>
+	<typedef resource="cpptasks.types" loaderRef="cctasks" classpathref="cpptasks-classpath"/>
+
+
+	<!--
+		This macro can be used to get connected AVR programmer serial port name. 
+		It's used in other build files, for instance to read serial name of connected device e.g. (cu.usbmodem14511)
+	-->
+	<macrodef name="avr-programmer">
+		<attribute name="searchDevice"/>
+		<attribute name="returnName"/>
+		<sequential>
+			<exec executable="sh" outputproperty="@{returnName}" failonerror="true">
+		    	<arg value="-c" />
+			    <arg value="ls -a /dev/* | grep -i '@{searchDevice}'"/>
+			</exec>
+		</sequential>
+	</macrodef>
+
+	<!--
+		This macro can be used to upload firmware in connected device. 
+		It's used in other build files.
+	-->
+	<macrodef name="avr-flash">
+		<attribute name="dev"/>
+		<attribute name="mcu"/>
+		<attribute name="programmer"/>
+		<attribute name="bitclock"/>
+		<attribute name="bin"/>
+		<attribute name="eep" default=""/>
+		<sequential>
+
+	        <exec executable="avrdude">
+	          <arg line="-p @{mcu} -B @{bitclock} -c @{programmer} -P @{dev} -e -U flash:w:@{bin} @{eep}"/>
+	        </exec>
+
+		</sequential>
+	</macrodef>
+
+	<!--
+		This macro can be used to get AVR MCU fuses. It's used in other build files, for instance to read avr fuses.
+	-->
+	<macrodef name="avr-fuses-read">
+		<attribute name="dev"/>
+		<attribute name="mcu"/>
+		<attribute name="programmer"/>
+		<attribute name="bitclock"/>
+		<attribute name="lfuse"/>
+		<attribute name="hfuse"/>
+		<attribute name="efuse"/>
+		<sequential>
+		
+	        <exec executable="sh" outputproperty="@{lfuse}" failonerror="true">
+	          <arg value="-c" />	
+	          <arg value="avrdude -p @{mcu} -B @{bitclock} -c @{programmer} -P @{dev} -U lfuse:r:-:h 2>/dev/null"/>
+	        </exec>
+
+	        <exec executable="sh" outputproperty="@{hfuse}" failonerror="true">
+	          <arg value="-c" />	
+	          <arg value="avrdude -p @{mcu} -B @{bitclock} -c @{programmer} -P @{dev} -U hfuse:r:-:h 2>/dev/null"/>
+	        </exec>
+
+	        <exec executable="sh" outputproperty="@{efuse}" failonerror="true">
+	          <arg value="-c" />	
+	          <arg value="avrdude -p @{mcu} -B @{bitclock} -c @{programmer} -P @{dev} -U efuse:r:-:h 2>/dev/null"/>
+	        </exec>
+
+	    </sequential>
+	</macrodef>
+
+	<!--
+		This macro can be used to write AVR MCU fuses. It's used in other build files, for instance to write avr fuses.
+	-->
+	<macrodef name="avr-fuses-write">
+		<attribute name="dev"/>
+		<attribute name="mcu"/>
+		<attribute name="programmer"/>
+		<attribute name="bitclock"/>
+		<attribute name="lfuse"/>
+		<attribute name="hfuse"/>
+		<attribute name="efuse"/>
+		<sequential>
+		
+	        <exec executable="sh" failonerror="true">
+	          <arg value="-c" />	
+	          <arg value="avrdude -p @{mcu} -B @{bitclock} -c @{programmer} -P @{dev} -U lfuse:w:@{lfuse}:m -U hfuse:w:@{hfuse}:m -U efuse:w:@{efuse}:m"/>
+	        </exec>
+
+	    </sequential>
+	</macrodef>
+	
+
+</project>
