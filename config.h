@@ -25,7 +25,6 @@
 #define _HOS_CONFIG_H 
 
 
-
 /* ------------------- START CONFIGURATION ------------------- */
 
 /* Baud rate for ESP8266 Wi-Fi module */

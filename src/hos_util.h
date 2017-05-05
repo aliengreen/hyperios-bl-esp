@@ -1,5 +1,5 @@
 /*
- *	hos_util.c
+ *	hos_util.h
  *
  *	Copyright (c) 2017 Picktek LLC
  *

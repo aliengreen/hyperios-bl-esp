@@ -145,6 +145,22 @@ The board has one LED located on the PCB board. See the list below for details o
 - LED flashes quickly - firmware upload in progress
 - LED flashes 5 times - firmware was update from external EEPROM
 
+
+## Merge two HEX files
+
+I'm 100% sure you are building application and bootloader separately. So you will end up with two .hex files and you will get them both onto the AVR. Here is how to merge the `firmware.hex` and `bootloader.hex` into a single file `application.hex`
+
+If you don't have `brew` installed download and install from [http://www.brew.sh](). Next install `srecord` with `brew`
+
+`> brew install srecord`
+
+Next we are going to use `srec_cat` CLI:
+
+`> srec_cat bootloader.hex -Intel firmware.hex -Intel -o application.hex -Intel -address-length=2 -Output_Block_Size=16`
+
+Done.
+
+
 Resources
 -----------
 
