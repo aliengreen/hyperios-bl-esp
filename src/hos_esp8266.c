@@ -22,18 +22,15 @@
 
 #include <stdlib.h>
 #include <ctype.h>
-
-
-#include "hos_esp8266.h"
-#include "config.h"
-
-
 #include <avr/boot.h> 
 #include <util/delay.h>
-#include <avr/interrupt.h>
 #include <string.h>
 #include <avr/eeprom.h>
 #include <avr/pgmspace.h>
+
+#include "hos_esp8266.h"
+#include "hos_util.h"
+#include "config.h"
 
 extern hos_config_perm conf;
 uint16_t checksum; 
@@ -79,41 +76,6 @@ void _HosEspConfigure(void)
     /* Listen TCP Poer */
     printf_P(PSTR("AT+CIPSERVER=1,%d\r\n"), BOOTLOADER_PORT);
 
-}
-
-void HosEspEraseProgramSpace(void) 
-{
-    uint16_t address = 0; 
-
-    /* Erase application flash section */
-    cli();
-    while (address < APP_END) {
-        boot_page_erase(address);    // perform page erase
-        boot_spm_busy_wait();            // wait until the memory is erased.
-        address += SPM_PAGESIZE;
-    }
-    sei();  
-    /* ------------------------------- */
-}
-
-// ------------------------------------------------------------------
-
-uint16_t HosEspWriteProgramPage(uint8_t *buffer, uint16_t address)
-{
-   uint16_t mem_data;  
-
-   for(uint8_t i = 0; i < SPM_PAGESIZE;) { 
-      mem_data = buffer[i++]; 
-      mem_data |= (buffer[i++] << 8); 
-      boot_page_fill(address, mem_data); 
-      address += 2; 
-   } 
-
-   boot_page_write(address - SPM_PAGESIZE);   // write to flash 
-   boot_spm_busy_wait();    
-   boot_rww_enable();         // we-enable the RWW section
-
-   return address;
 }
 
 // ------------------------------------------------------------------

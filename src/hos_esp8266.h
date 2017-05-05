@@ -38,8 +38,7 @@
 #define HOS_SHELL_MAX_CMD_LENGTH            128
 
 void HosEspRunLoop(void);
-void HosEspEraseProgramSpace(void);
-uint16_t HosEspWriteProgramPage(uint8_t *buffer, uint16_t address);
+
 
 #endif /* _HOS_ESP8266_H */
 

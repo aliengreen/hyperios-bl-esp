@@ -20,15 +20,15 @@
  *
  */
 
-#include <avr/boot.h> 
-#include <util/delay.h>
 #include <avr/interrupt.h>
 #include <string.h>
 #include <avr/pgmspace.h>
+#include <avr/wdt.h>
 #include <avr/eeprom.h>
 
 #include "config.h" 
 #include "hos_esp8266.h"
+#include "hos_util.h"
 #include "hos_i2c.h"
 #include "hos_24cxx.h"
 
@@ -43,46 +43,19 @@ hos_config_perm EEMEM eemem_conf = {
             0x0000, /* EEPROM page offset */
             0x0000, /* EEPROM Recovery page count */
             0x0000, /* EEPROM Recovery page offset */
-            {0x22,0xEF,0x61,0x5E,0x7B,0xCD,0x47,0xE0,0xAF,0xD1,0x8D,0x43,0xC8,0x66,0xDB,0xAB}, /* UUID */
-            {'M','O','S','T','A','T','-','8','d','4','3','c','8','6','6','d','b','a','b',0}, /* SSID */
+            {0x18,0xFE,0x34,0xFF,0xFE,0xD3,0x44,0xE7}, /* EUID */
+            {'M','O','S','T','A','T','-','3','4','F','F','F','E','D','3','4','4','E','7',0}, /* SSID */
+            {'E','6','D','3','6','D','5','1','4','3','8','E','6'}
           };
 
 
-static FILE mystdout = FDEV_SETUP_STREAM(HosSerialTX, HosSerialRX,
-                                         _FDEV_SETUP_RW);
+static FILE mystdout = FDEV_SETUP_STREAM(HosSerialTX, HosSerialRX, _FDEV_SETUP_RW);
                                          
-uint8_t buffer[SPM_PAGESIZE];
 
-//------------------------------------------------------------------------------
-
-void HosSerialTX(uint8_t b) 
-{ 
-   while (!(myUCSRA & (1<<myUDRE)));   // Wait for empty transmit buffer 
-   myUDR = b;   // send byte 
-} 
-
-//------------------------------------------------------------------------------
-
-uint8_t HosSerialRX(void) 
-{ 
-   while (!(myUCSRA & (1<<myRXC))); 
-   return myUDR;                     // Get byte 
-} 
-
-//------------------------------------------------------------------------------
-
-void _HosLedBlink(uint8_t count) {
-
-    for(uint8_t i = 0; i < count; i++) {
-      LED_ON();
-      _delay_ms(200);
-      LED_OFF();
-      _delay_ms(200);
-    }
-}
 
 //------------------------------------------------------------------------------
 #if defined(ALLOW_24CXX)
+uint8_t buffer[SPM_PAGESIZE];
 void _HosLoadProgramFromEEPROM(uint16_t start_page, uint16_t page_count)
 {
       uint16_t address = 0; 
@@ -93,9 +66,9 @@ void _HosLoadProgramFromEEPROM(uint16_t start_page, uint16_t page_count)
 
       for(uint16_t n = start_page; n < page_count; n++) {
          Hos24cxxReadData(n * SPM_PAGESIZE, (unsigned char*)buffer, SPM_PAGESIZE);
-         address = HosEspWriteProgramPage(buffer, address);
+          address = HosEspWriteProgramPage(buffer, address);
       }
-      _HosLedBlink(5);
+      HosLedBlink(5);
 }
 #endif
 
@@ -158,10 +131,7 @@ void HosInitDevice(void)
 
 
     // Serial Init 
-    myUBRRH = (F_CPU / (BAUDRATE * 16L) - 1) >> 8;       // calculate baudrate and set high byte
-    myUBRRL = (uint8_t)(F_CPU / (BAUDRATE * 16L) - 1);   // and low byte
-    myUCSRB = _BV(myTXEN) | _BV(myRXEN);                 // enable transmitter and receiver and receiver interrupt  
-    myUCSRC = myURSEL | _BV(myUCSZ1) | _BV(myUCSZ0);     // 8 bit character size, 1 stop bit, no parity
+    HosSerialInit();
 }
 
 //------------------------------------------------------------------------------
@@ -172,7 +142,7 @@ uint8_t _HosFactoryClicked(void)
     if (HosIoBitIsSet(BUTTON_INPUT_REG, BUTTON_INPUT_PIN)) {
         debon++;
         if(debon == 1000000) {
-          _HosLedBlink(3);
+          HosLedBlink(3);
           return 1;
         }
     } 
@@ -231,8 +201,10 @@ int main(void)
 dfu:
     LED_ON();
 
+#if defined(ALLOW_WIFI)
     /* Start bootloader */
     HosEspRunLoop();
-    
+#endif
+
     return 0; 
 }

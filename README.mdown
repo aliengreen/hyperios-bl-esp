@@ -51,8 +51,9 @@ For storing configuration values we use AVR internal EEPROM memory. Configuratio
 	    uint16_t  eeprom_recovery_page_count;
 	    uint16_t  eeprom_recovery_page_offset;
 	
-	    uint8_t   euid64[BOOTLOADER_UUID_LENGTH];
-	    uint8_t   ssid[BOOTLOADER_SSID_LENGTH];
+	    uint8_t   euid64[];
+	    uint8_t   ssid[];
+	    uint8-t   key[];
 	}
 
 
@@ -65,6 +66,7 @@ For storing configuration values we use AVR internal EEPROM memory. Configuratio
 - `eeprom_recovery_page_offset` offset of recovery firmware image stored in external EEPROM section.
 - `euid64` device serial number EUI-64
 - `ssid` WI-FI SSID name
+- `key` 128bit master key
 
 
 ### build.xml
@@ -95,7 +97,7 @@ If you don't use WI-FI reset pin, please comment `#define WIRELESS_RESET_PORT` d
 > In most cases you don't need to change default baud rate `BAUDRATE   19200`, but make sure to configure your ESP8266 WI-FI module for `19200` baud rate in order to work correctly. 
 
 
-## Build script commands
+## Build
 
 * `ant all` -  build all source files in `src` directory and store compiled files in `bin` and `o` directories
 * `ant up` - upload `bootloader.hex` in connected device
@@ -136,7 +138,7 @@ If all goes well, you should see similar output:
 
 ## LED indicators
 
-The board has one LED located on the PCB board.
+The board has one LED located on the PCB board. See the list below for details of its blinking patterns.
 
 - LED glow solid - the device are in DFU mode
 - LED flashes 3 times - onboard button was pushed and the device entered in DFU mode
