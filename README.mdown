@@ -102,6 +102,8 @@ If you don't use WI-FI reset pin, please comment `#define WIRELESS_RESET_PORT` d
 * `ant all` -  build all source files in `src` directory and store compiled files in `bin` and `o` directories
 * `ant up` - upload `bootloader.hex` in connected device
 * `ant clean` - clean up everything (remove `bin` and `o` directories)
+* `ant size` - Get binary .elf file size information
+* `ant size-o` - Get all object file information from ./o/ directory
 * `ant fuses-r` - read AVR fuses from connected device
 
 Also, you can update AVR fuses by the following ant task:

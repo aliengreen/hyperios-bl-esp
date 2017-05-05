@@ -73,7 +73,14 @@
 			<arg line="-A --mcu=${mcu} ${outputfiles}/${executable}"/>
         </exec>	
 	</target>
-	
+
+	<target name="size-o">	
+        <exec executable="sh" failonerror="true">
+	          <arg value="-c" />	
+	          <arg value="avr-size --mcu=${mcu} ${objectfiles}/*"/>
+	    </exec>
+	</target>
+
 	<!-- Upload firmware with avrdude -->
     <target name="up">
 		<avr-programmer returnName="devname" searchDevice="cu.usbmodem" />
