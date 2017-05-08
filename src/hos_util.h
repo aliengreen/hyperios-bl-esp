@@ -40,7 +40,7 @@
 
 #define BOOTLOADER_PORT                              23
 
-#define BOOTLOADER_UUID_LENGTH                       16
+#define BOOTLOADER_EUI64_LENGTH                      8
 #define BOOTLOADER_SSID_LENGTH                       20
 #define BOOTLOADER_KEY_LENGTH                        16
 
@@ -65,7 +65,7 @@ struct _hos_config_perm
     uint16_t  eeprom_recovery_page_count;
     uint16_t  eeprom_recovery_page_offset;
 
-    uint8_t   euid64[BOOTLOADER_UUID_LENGTH];
+    uint8_t   eui64[BOOTLOADER_EUI64_LENGTH];
     uint8_t   ssid[BOOTLOADER_SSID_LENGTH];
     uint8_t   key[BOOTLOADER_KEY_LENGTH];
 

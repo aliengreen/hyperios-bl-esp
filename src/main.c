@@ -38,15 +38,28 @@ hos_config_perm conf;
 hos_config_perm EEMEM eemem_conf = {
             0x00, /* MCUSR value */
             0x00, /* Number of booting */ 
-            BOOTLOADER_LOCK_VALUE, /* flash_lock bits */
+            0x00, /* flash_lock bits */
             0x0000, /* EEPROM page count*/ 
             0x0000, /* EEPROM page offset */
             0x0000, /* EEPROM Recovery page count */
             0x0000, /* EEPROM Recovery page offset */
-            {0x18,0xFE,0x34,0xFF,0xFE,0xD3,0x44,0xE7}, /* EUI-64 */
+            {0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00}, /* EUI-64 */
             {'M','O','S','T','A','T','-','3','4','F','F','F','E','D','3','4','4','E','7',0}, /* SSID */
             {'E','6','D','3','6','D','5','1','4','3','8','E','6'}
           };
+
+// hos_config_perm EEMEM eemem_conf = {
+//             0x00, /* MCUSR value */
+//             0x00, /* Number of booting */ 
+//             BOOTLOADER_LOCK_VALUE, /* flash_lock bits */
+//             0x0000, /* EEPROM page count*/ 
+//             0x0000, /* EEPROM page offset */
+//             0x0000,  EEPROM Recovery page count 
+//             0x0000, /* EEPROM Recovery page offset */
+//             {0x18,0xFE,0x34,0xFF,0xFE,0xD3,0x44,0xE7}, /* EUI-64 */
+//             {'M','O','S','T','A','T','-','3','4','F','F','F','E','D','3','4','4','E','7',0}, /* SSID */
+//             {'E','6','D','3','6','D','5','1','4','3','8','E','6'}
+//           };
 
 
 static FILE mystdout = FDEV_SETUP_STREAM(HosSerialTX, HosSerialRX, _FDEV_SETUP_RW);
