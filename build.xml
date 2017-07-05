@@ -7,6 +7,7 @@
 	
     <property name="mcu" value="atmega328p"/>
     <property name="f_cpu" value="8000000UL"/>
+    <property name="avrdude_bitclock" value="3"/>
     <property name="sectionstart" value="0x7000"/>
 
 	<property name="src" value="src"/>
@@ -86,7 +87,7 @@
 		<avr-programmer returnName="devname" searchDevice="cu.usbmodem" />
         <echo message="Upload to '${devname}', MCU - '${mcu}', CLOCK - '${f_cpu}'"/>
 
-		<avr-flash dev="${devname}" mcu="${mcu}" programmer="stk500v2" bitclock="1" 
+		<avr-flash dev="${devname}" mcu="${mcu}" programmer="stk500v2" bitclock="${avrdude_bitclock}" 
 						bin="${outputfiles}/${configuration}.hex" eep="-U eeprom:w:${outputfiles}/${configuration}.eep"/>
     </target>
 	
@@ -94,7 +95,7 @@
     <target name="fuses-r">
     	<avr-programmer returnName="devname" searchDevice="cu.usbmodem" />
     	<echo message="Read from '${devname}', MCU - '${mcu}', CLOCK - '${f_cpu}'"/>
-		<avr-fuses-read dev="${devname}" mcu="${mcu}" programmer="stk500v2" bitclock="1" 
+		<avr-fuses-read dev="${devname}" mcu="${mcu}" programmer="stk500v2" bitclock="${avrdude_bitclock}" 
 						lfuse="lfuse" hfuse="hfuse" efuse="efuse" />
 		<echo message="FUSES LOW - ${lfuse}, HIGH - ${hfuse}, EXT - ${efuse}"/>
     </target>
@@ -104,7 +105,7 @@
     	<avr-programmer returnName="devname" searchDevice="cu.usbmodem" />
   		<echo message="Write FUSES to '${devname}', MCU - '${mcu}', CLOCK - '${f_cpu}'"/>
 		<echo message="FUSES L,H,E - ${l}, ${h}, ${e}"/>
-		<avr-fuses-write dev="${devname}" mcu="${mcu}" programmer="stk500v2" bitclock="1" 
+		<avr-fuses-write dev="${devname}" mcu="${mcu}" programmer="stk500v2" bitclock="${avrdude_bitclock}" 
 						lfuse="${l}" hfuse="${h}" efuse="${e}" />
 
     </target>
