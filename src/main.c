@@ -39,7 +39,7 @@ hos_config_perm conf;
 hos_config_perm EEMEM eemem_conf = {
             0x00, /* MCUSR value */
             0x00, /* Number of booting */ 
-            0x00, /* flash_lock bits */
+            0xFD, /* flash_lock bits */
             0x0000, /* EEPROM page count*/ 
             0x0000, /* EEPROM page offset */
             0x0000, /* EEPROM Recovery page count */
