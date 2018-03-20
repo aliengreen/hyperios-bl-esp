@@ -45,6 +45,8 @@
 					<compilerarg value="-mmcu=${mcu}"/>										
 					<compilerarg value="-Os"/>				
 					<compilerarg value="-DF_CPU=${f_cpu}"/>
+					<compilerarg value="-DBOARD_REV='${board_rev}'"/>
+					<compilerarg value="-DBAUDRATE=${f_baudrate}"/>
 					<compilerarg value="-std=gnu99"/>		
 					<compilerarg value="-Wall"/>		
 					<compilerarg value="-gdwarf-2"/>		
@@ -130,6 +132,8 @@
 				    <compilerarg value="-mmcu=${mcu}"/>										
 					<compilerarg value="-Os"/>				
 					<compilerarg value="-DF_CPU=${f_cpu}"/>
+					<compilerarg value="-DBOARD_REV='${board_rev}'"/>
+					<compilerarg value="-DBAUDRATE=${f_baudrate}"/>
 					<compilerarg value="-std=gnu99"/>
 					<compilerarg value="-Wall"/>		
 					<compilerarg value="-gdwarf-2"/>	

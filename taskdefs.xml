@@ -23,6 +23,7 @@
 		</sequential>
 	</macrodef>
 
+
 	<!--
 		This macro can be used to upload firmware in connected device. 
 		It's used in other build files.
@@ -35,9 +36,11 @@
 		<attribute name="bin"/>
 		<attribute name="eep" default=""/>
 		<sequential>
+			
+			<echo message="avrdude -p @{mcu} -B @{bitclock} -c @{programmer} -e -U flash:w:@{bin} @{eep}"/>
 
 	        <exec executable="avrdude">
-	          <arg line="-p @{mcu} -B @{bitclock} -c @{programmer} -P @{dev} -e -U flash:w:@{bin} @{eep}"/>
+	          <arg line="-p @{mcu} -B @{bitclock} -c @{programmer} -e -U flash:w:@{bin} @{eep}"/>
 	        </exec>
 
 		</sequential>
@@ -55,20 +58,22 @@
 		<attribute name="hfuse"/>
 		<attribute name="efuse"/>
 		<sequential>
-		
+			
 	        <exec executable="sh" outputproperty="@{lfuse}" failonerror="true">
 	          <arg value="-c" />	
-	          <arg value="avrdude -p @{mcu} -B @{bitclock} -c @{programmer} -P @{dev} -U lfuse:r:-:h 2>/dev/null"/>
+	          <arg value="avrdude -p @{mcu} -B @{bitclock} -c @{programmer} -U lfuse:r:-:h 2>/dev/null"/>
+
 	        </exec>
 
 	        <exec executable="sh" outputproperty="@{hfuse}" failonerror="true">
 	          <arg value="-c" />	
-	          <arg value="avrdude -p @{mcu} -B @{bitclock} -c @{programmer} -P @{dev} -U hfuse:r:-:h 2>/dev/null"/>
+	          <arg value="avrdude -p @{mcu} -B @{bitclock} -c @{programmer} -U hfuse:r:-:h 2>/dev/null"/>
 	        </exec>
 
 	        <exec executable="sh" outputproperty="@{efuse}" failonerror="true">
 	          <arg value="-c" />	
-	          <arg value="avrdude -p @{mcu} -B @{bitclock} -c @{programmer} -P @{dev} -U efuse:r:-:h 2>/dev/null"/>
+	          <arg value="avrdude -p @{mcu} -B @{bitclock} -c @{programmer} -U efuse:r:-:h 2>/dev/null"/>
+
 	        </exec>
 
 	    </sequential>
@@ -86,10 +91,12 @@
 		<attribute name="hfuse"/>
 		<attribute name="efuse"/>
 		<sequential>
-		
+			
+			<echo message="avrdude -p @{mcu} -B @{bitclock} -c @{programmer} -U lfuse:w:@{lfuse}:m -U hfuse:w:@{hfuse}:m -U efuse:w:@{efuse}:m"/>
+
 	        <exec executable="sh" failonerror="true">
 	          <arg value="-c" />	
-	          <arg value="avrdude -p @{mcu} -B @{bitclock} -c @{programmer} -P @{dev} -U lfuse:w:@{lfuse}:m -U hfuse:w:@{hfuse}:m -U efuse:w:@{efuse}:m"/>
+	          <arg value="avrdude -p @{mcu} -B @{bitclock} -c @{programmer} -U lfuse:w:@{lfuse}:m -U hfuse:w:@{hfuse}:m -U efuse:w:@{efuse}:m"/>
 	        </exec>
 
 	    </sequential>

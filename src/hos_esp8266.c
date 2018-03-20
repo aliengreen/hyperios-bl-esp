@@ -32,6 +32,8 @@
 #include "hos_util.h"
 #include "config.h"
 
+#if defined(ALLOW_WIFI)
+
 extern hos_config_perm conf;
 uint16_t checksum; 
 uint16_t indexa;
@@ -64,7 +66,7 @@ void _HosEspConfigure(void)
     _delay_ms(1000);
 
     /* Create newtwork using SoftAP mode , 11 Channel, 3 - WPA2_PSK security password 'MOSTAT123' */
-    printf_P(PSTR("AT+CWSAP_CUR=\"%s\",\"MOSTAT123\",11,3\r\n"), conf.ssid); 
+    printf_P(PSTR("AT+CWSAP_CUR=\"%s\",\"MOSTAT123\",11,3\r\n"), conf.ssid);
 
     _delay_ms(1000);
 
@@ -215,3 +217,5 @@ void HosEspRunLoop(void)
 }
 
 // ------------------------------------------------------------------
+
+#endif // ALLOW_WIFI

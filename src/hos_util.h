@@ -37,6 +37,7 @@
 #define BOOTLOADER_EEPROM_LOAD_COMPLETED_VALUE       249
 #define BOOTLOADER_EEPROM_RECOVERY_VALUE             248
 #define BOOTLOADER_EEPROM_RECOVERY_COMPLETED_VALUE   247
+#define BOOTLOADER_ESP8266_UART_LOAD_VALUE           246
 
 #define BOOTLOADER_PORT                              23
 
@@ -44,8 +45,8 @@
 #define BOOTLOADER_SSID_LENGTH                       20
 #define BOOTLOADER_KEY_LENGTH                        16
 
-#define BOOTLOADER_VERSION_MAJOR                    '1' 
-#define BOOTLOADER_VERSION_MINOR                    '0' 
+#define BOOTLOADER_VERSION_MAJOR                    '0'
+#define BOOTLOADER_VERSION_MINOR                    '1'
 
 #if !defined(BUTTON_INPUT_PORT) 
   #error "Please define `BUTTON_INPUT_*` directives" 
@@ -65,9 +66,11 @@ struct _hos_config_perm
     uint16_t  eeprom_recovery_page_count;
     uint16_t  eeprom_recovery_page_offset;
 
+#if defined(ALLOW_WIFI)
     uint8_t   eui64[BOOTLOADER_EUI64_LENGTH];
     uint8_t   ssid[BOOTLOADER_SSID_LENGTH];
     uint8_t   key[BOOTLOADER_KEY_LENGTH];
+#endif
 
 } __attribute__ ((__packed__));
 
@@ -95,9 +98,12 @@ void HosSerialInit(void);
 void HosSerialTX(uint8_t b);
 uint8_t HosSerialRX(void);
 void HosLedBlink(uint8_t count);
+void HosRebootCPU();
 
 void HosEspEraseProgramSpace(void);
 uint16_t HosEspWriteProgramPage(uint8_t *buffer, uint16_t address);
+uint16_t HosUdsCRC16(uint8_t *data, uint16_t length, uint16_t crc);
+void hexDump (char *desc, void *addr, int len);
 
 
 // TODO: make use of RAMEND in the avr-libc io-files and 

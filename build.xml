@@ -1,15 +1,21 @@
 <project default="all">
 
+    <!-- General -->
     <property name="configuration" value="bootloader"/>
-	<property name="executable" value="${configuration}.elf"/>
-	<property name="outputfile" value="${configuration}.a"/>
-	
-	
     <property name="mcu" value="atmega328p"/>
     <property name="f_cpu" value="8000000UL"/>
+    <property name="f_baudrate" value="19200"/>
     <property name="avrdude_bitclock" value="3"/>
     <property name="sectionstart" value="0x7000"/>
+    <property name="board_rev" value="B"/>
 
+    <!-- External Crystal 8Mhz -->
+    <property name="l" value="0xfd"/>
+    <property name="h" value="0xd0"/>
+    <property name="e" value="0xfd"/>
+    
+	<property name="executable" value="${configuration}.elf"/>
+	<property name="outputfile" value="${configuration}.a"/>
 	<property name="src" value="src"/>
 	<property name="objectfiles" value="o"/>
 	<property name="outputfiles" value="bin"/>
@@ -84,28 +90,28 @@
 
 	<!-- Upload firmware with avrdude -->
     <target name="up">
-		<avr-programmer returnName="devname" searchDevice="cu.usbmodem" />
+		<!-- <avr-programmer returnName="devname" searchDevice="cu.usbmodem" /> -->
         <echo message="Upload to '${devname}', MCU - '${mcu}', CLOCK - '${f_cpu}'"/>
 
-		<avr-flash dev="${devname}" mcu="${mcu}" programmer="stk500v2" bitclock="${avrdude_bitclock}" 
+		<avr-flash dev="${devname}" mcu="${mcu}" programmer="usbtiny" bitclock="${avrdude_bitclock}" 
 						bin="${outputfiles}/${configuration}.hex" eep="-U eeprom:w:${outputfiles}/${configuration}.eep"/>
     </target>
 	
 	<!-- avrdude tells you a fuses for connected chip.  -->
     <target name="fuses-r">
-    	<avr-programmer returnName="devname" searchDevice="cu.usbmodem" />
+    	<!-- <avr-programmer returnName="devname" searchDevice="cu.usbmodem" /> -->
     	<echo message="Read from '${devname}', MCU - '${mcu}', CLOCK - '${f_cpu}'"/>
-		<avr-fuses-read dev="${devname}" mcu="${mcu}" programmer="stk500v2" bitclock="${avrdude_bitclock}" 
+		<avr-fuses-read dev="${devname}" mcu="${mcu}" programmer="usbtiny" bitclock="${avrdude_bitclock}" 
 						lfuse="lfuse" hfuse="hfuse" efuse="efuse" />
 		<echo message="FUSES LOW - ${lfuse}, HIGH - ${hfuse}, EXT - ${efuse}"/>
     </target>
 
     <!-- Write fuses -->
     <target name="fuses-w">
-    	<avr-programmer returnName="devname" searchDevice="cu.usbmodem" />
+    	<!-- <avr-programmer returnName="devname" searchDevice="cu.usbmodem" /> -->
   		<echo message="Write FUSES to '${devname}', MCU - '${mcu}', CLOCK - '${f_cpu}'"/>
 		<echo message="FUSES L,H,E - ${l}, ${h}, ${e}"/>
-		<avr-fuses-write dev="${devname}" mcu="${mcu}" programmer="stk500v2" bitclock="${avrdude_bitclock}" 
+		<avr-fuses-write dev="${devname}" mcu="${mcu}" programmer="usbtiny" bitclock="${avrdude_bitclock}" 
 						lfuse="${l}" hfuse="${h}" efuse="${e}" />
 
     </target>

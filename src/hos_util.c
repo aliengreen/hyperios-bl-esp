@@ -22,6 +22,7 @@
 #include <avr/interrupt.h>
 #include <avr/boot.h> 
 #include <util/delay.h>
+#include <avr/pgmspace.h>
 
 #include "hos_util.h"
 
@@ -103,3 +104,85 @@ void HosLedBlink(uint8_t count)
 
 // ------------------------------------------------------------------
 
+void HosRebootCPU()
+{
+  WIFI_RST_OFF();
+  _delay_ms(100);
+  WIFI_RST_ON();
+  _delay_ms(3000);
+}
+
+// ------------------------------------------------------------------
+
+/**
+ * CRC16-CCITT checksum calculation
+ *
+ * @param data source buffer
+ * @param length source buffer length
+ * @param crc start rcr value
+ */
+uint16_t HosUdsCRC16(uint8_t *data, uint16_t length, uint16_t crc)
+{
+    uint8_t x;
+
+    while(length--) {
+        x = crc >> 8 ^ *data++;
+        x ^= x >> 4;
+        crc = (crc << 8) ^ ((uint16_t) (x << 12)) ^ ((uint16_t) (x << 5)) ^ ((uint16_t) x);
+    }
+
+    return crc;
+}
+
+void hexDump (char *desc, void *addr, int len) 
+{
+    int i;
+    unsigned char buff[17];
+    unsigned char *pc = (unsigned char*)addr;
+
+    // Output description if given.
+    if (desc != NULL)
+        printf_P (PSTR("%s:\n"), desc);
+
+    if (len == 0) {
+        printf_P(PSTR("  ZERO LENGTH\n"));
+        return;
+    }
+    if (len < 0) {
+        printf_P(PSTR("  NEGATIVE LENGTH: %i\n"),len);
+        return;
+    }
+
+    // Process every byte in the data.
+    for (i = 0; i < len; i++) {
+        // Multiple of 16 means new line (with line offset).
+
+        if ((i % 16) == 0) {
+            // Just don't print ASCII for the zeroth line.
+            if (i != 0)
+                printf_P (PSTR("  %s\n"), buff);
+
+            // Output the offset.
+            printf_P (PSTR("  %04x "), i);
+        }
+
+        // Now the hex code for the specific character.
+        printf_P (PSTR(" %02x"), pc[i]);
+
+        // And store a printable ASCII character for later.
+        if ((pc[i] < 0x20) || (pc[i] > 0x7e))
+            buff[i % 16] = '.';
+        else
+            buff[i % 16] = pc[i];
+        buff[(i % 16) + 1] = '\0';
+    }
+
+    // Pad out last line if not exactly 16 characters.
+    while ((i % 16) != 0) {
+        printf_P (PSTR("   "));
+        i++;
+    }
+
+    // And print the final ASCII bit.
+    printf_P (PSTR("  %s\n"), buff);
+}

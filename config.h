@@ -25,6 +25,7 @@
 #define _HOS_CONFIG_H 
 
 
+
 /* ------------------- START CONFIGURATION ------------------- */
 
 /* Baud rate for ESP8266 Wi-Fi module */
@@ -36,23 +37,41 @@
 #define WIRELESS_RESET_PIN          PIND2       
 #define WIRELESS_RESET_DDR          DDRD    
 
+/* On Board Relay */
+#define WIFI_RST_ON()  WIRELESS_RESET_PORT |= (_BV(WIRELESS_RESET_PIN))
+#define WIFI_RST_OFF() WIRELESS_RESET_PORT &= ~(_BV(WIRELESS_RESET_PIN))
+#define WIFI_RST_ION() ((WIRELESS_RESET_PORT & (_BV(WIRELESS_RESET_PIN))) > 0)
+
 /* 'On-board factory button' */
 #define BUTTON_INPUT_PORT           PORTD        /* PORTx - register for 'Buttons' */
 #define BUTTON_INPUT_REG            PIND         /* PINx - register for 'Buttons' */
 #define BUTTON_INPUT_PIN            PIND3        /* bit for 'Buttons' for input/output */
 #define BUTTON_INPUT_DDR            DDRD         /* 'Buttons' data direction register */
 
-/* 'On-board LED' */
-#define LED_OUTPUT_PORT             PORTC        /* PORTx - register for 'Buzzer' */
-#define LED_OUTPUT_REG              PINC         /* PINx - register for 'Buzzer' */
-#define LED_OUTPUT_PIN              PINC1        /* bit for 'Buzzer' for input/output */
-#define LED_OUTPUT_DDR              DDRC         /* 'Buzzer' data direction register */
+#if 'A' == BOARD_REV
+    /* 'Light Status for old version mostat REVA' */
+    #define LED_OUTPUT_PORT PORTC
+    #define LED_OUTPUT_REG  PINC
+    #define LED_OUTPUT_PIN  PINC1
+    #define LED_OUTPUT_DDR  DDRC
+#elif 'B' == BOARD_REV
+    /* 'Light Status for new version mostat REVB' */
+    #define LED_OUTPUT_PORT PORTB
+    #define LED_OUTPUT_REG  PINB
+    #define LED_OUTPUT_PIN  PINB1
+    #define LED_OUTPUT_DDR  DDRB
+#else 
+    #error "Unknow revision !"
+#endif
 
 /* Using external EEPROM. If you don't need to update from EEPROM just comment */
-#define ALLOW_24CXX
+// #define ALLOW_24CXX
 
 /* Using WI-FI serial programming. If you don't need WI-FI serial programming just comment */
-#define ALLOW_WIFI
+// #define ALLOW_WIFI
+
+/* Using external ESP8266 Wi-fi chip SPI flash. If you don't need to update from this method just comment */
+#define ALLOW_ESP8266_UART
 
 /* ------------------- END CONFIGURATION ------------------- */
 

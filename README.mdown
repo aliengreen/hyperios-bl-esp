@@ -14,6 +14,7 @@ Before you upload bootloader always better to set the BOOTRST fuse to run the bo
 
 - Update firmware from WI-FI network
 - Update firmware from external EEPROM 24cXX
+- Update firmware from ESP8266 SPI flash through UART
 - Onboard factory reset button
 - Onboard LED
 - Using internal EEPROM to store configuration
