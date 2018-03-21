@@ -1,7 +1,7 @@
 <project default="all">
 
     <!-- General -->
-    <property name="configuration" value="bootloader"/>
+    <property name="configuration" value="bootloader_b"/>
     <property name="mcu" value="atmega328p"/>
     <property name="f_cpu" value="8000000UL"/>
     <property name="f_baudrate" value="19200"/>

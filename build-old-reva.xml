@@ -1,0 +1,125 @@
+<project default="all">
+
+    <!-- General -->
+    <property name="configuration" value="bootloader_a"/>
+    <property name="mcu" value="atmega328p"/>
+    <property name="f_cpu" value="8000000UL"/>
+    <property name="f_baudrate" value="19200"/>
+    <property name="avrdude_bitclock" value="3"/>
+    <property name="sectionstart" value="0x7000"/>
+    <property name="board_rev" value="A"/>
+
+    <!-- External Crystal 8Mhz -->
+    <property name="l" value="0xe2"/>
+    <property name="h" value="0xd0"/>
+    <property name="e" value="0xfd"/>
+    
+	<property name="executable" value="${configuration}.elf"/>
+	<property name="outputfile" value="${configuration}.a"/>
+	<property name="src" value="src"/>
+	<property name="objectfiles" value="o"/>
+	<property name="outputfiles" value="bin"/>
+
+	<!-- Import the rest from config.xml (magic) -->
+	<import file="./compiler.xml"/>
+	<import file="./taskdefs.xml"/>
+
+	<target name="all" depends="compile-c,repack,link,size" />
+	
+	
+	<!-- compile the java sources -->
+	<target name="compile-c" >
+		<platform-compile objectfiles="${objectfiles}" outputdir="${outputfiles}">
+			<compile-elements>
+
+				<!-- include directories -->
+				<includepath>
+				    <pathelement path="."/>
+					<pathelement path="${os}"/>
+					<pathelement path="${src}"/>
+				</includepath>
+		
+				<!-- input files -->
+				<fileset dir="${src}">
+					<include name="**/*.c"/>
+					<include name="**/*.S"/>
+				</fileset>
+				
+				<fileset dir=".">
+					<include name="**/*.c"/>
+				</fileset>
+				
+			</compile-elements>
+		</platform-compile>
+	</target>
+
+	<!-- Repack everything that's in the build dir into a single .a file -->
+	<target name="repack">
+		<pathconvert property="objectfiles2" pathsep=" ">
+		  <fileset dir="${objectfiles}" includes="**/*.o"/>
+		</pathconvert>
+		<delete file="${outputfile}"/>
+		<exec executable="avr-ar">
+			<arg line="rcs ${outputfiles}/${outputfile} ${objectfiles2}"/>
+		</exec>
+	</target>
+		
+  <target name="link">
+    <platform-link outputfile="${outputfiles}/${executable}" sectionstart="${sectionstart}">
+    	<link-elements>      
+         <fileset dir="${objectfiles}" includes="**/*.o"/>
+    	</link-elements>
+    </platform-link>
+  </target>
+
+	<target name="size">	
+        <exec executable="avr-size">
+			<arg line="-C --mcu=${mcu} ${outputfiles}/${executable}"/>
+        </exec>	
+        <exec executable="avr-size">
+			<arg line="-A --mcu=${mcu} ${outputfiles}/${executable}"/>
+        </exec>	
+	</target>
+
+	<target name="size-o">	
+        <exec executable="sh" failonerror="true">
+	          <arg value="-c" />	
+	          <arg value="avr-size --mcu=${mcu} ${objectfiles}/*"/>
+	    </exec>
+	</target>
+
+	<!-- Upload firmware with avrdude -->
+    <target name="up">
+		<!-- <avr-programmer returnName="devname" searchDevice="cu.usbmodem" /> -->
+        <echo message="Upload to '${devname}', MCU - '${mcu}', CLOCK - '${f_cpu}'"/>
+
+		<avr-flash dev="${devname}" mcu="${mcu}" programmer="usbtiny" bitclock="${avrdude_bitclock}" 
+						bin="${outputfiles}/${configuration}.hex" eep="-U eeprom:w:${outputfiles}/${configuration}.eep"/>
+    </target>
+	
+	<!-- avrdude tells you a fuses for connected chip.  -->
+    <target name="fuses-r">
+    	<!-- <avr-programmer returnName="devname" searchDevice="cu.usbmodem" /> -->
+    	<echo message="Read from '${devname}', MCU - '${mcu}', CLOCK - '${f_cpu}'"/>
+		<avr-fuses-read dev="${devname}" mcu="${mcu}" programmer="usbtiny" bitclock="${avrdude_bitclock}" 
+						lfuse="lfuse" hfuse="hfuse" efuse="efuse" />
+		<echo message="FUSES LOW - ${lfuse}, HIGH - ${hfuse}, EXT - ${efuse}"/>
+    </target>
+
+    <!-- Write fuses -->
+    <target name="fuses-w">
+    	<!-- <avr-programmer returnName="devname" searchDevice="cu.usbmodem" /> -->
+  		<echo message="Write FUSES to '${devname}', MCU - '${mcu}', CLOCK - '${f_cpu}'"/>
+		<echo message="FUSES L,H,E - ${l}, ${h}, ${e}"/>
+		<avr-fuses-write dev="${devname}" mcu="${mcu}" programmer="usbtiny" bitclock="${avrdude_bitclock}" 
+						lfuse="${l}" hfuse="${h}" efuse="${e}" />
+
+    </target>
+
+	<!-- Clean the build dir -->
+	<target name="clean">
+		<delete dir="./o"/>
+		<delete dir="./bin"/>
+	</target>
+	
+</project>
