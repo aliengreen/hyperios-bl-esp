@@ -39,13 +39,13 @@ hos_config_perm conf;
 hos_config_perm EEMEM eemem_conf = {
             0x00, /* MCUSR value */
             0x00, /* Number of booting */ 
-            0xFD, /* flash_lock bits */
+            0x00, /* flash_lock bits */
             0x0000, /* EEPROM page count*/ 
             0x0000, /* EEPROM page offset */
             0x0000, /* EEPROM Recovery page count */
             0x0000 /* EEPROM Recovery page offset */
 #if defined(ALLOW_WIFI)
-            {0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00}, /* EUI-64 */
+            ,{0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00}, /* EUI-64 */
             {'M','O','S','T','A','T','-','3','4','F','F','F','E','D','3','4','4','E','7',0}, /* SSID */
             {'E','6','D','3','6','D','5','1','4','3','8','E','6'}
 #endif
@@ -97,9 +97,19 @@ uint16_t HosESP8266NeedUpdate()
 {
     uint8_t tmp[2];
     uint16_t rem_crc = 0;
-
+    uint32_t i = 0;
+    
     printf_P(PSTR("FCHK=1\r\n"));
 
+    /* Weit for about 3sec to receive start byte */
+    while(HosSerialRX() != ':') {
+      if(i > 2000000) {
+        return 0;
+      }
+      i++;
+    }
+    
+    /* Receive Chechsum */
     for(uint16_t i = 0; i < 2; i++) {
         tmp[i] = HosSerialRX();
     }
@@ -111,8 +121,8 @@ uint16_t HosESP8266NeedUpdate()
 
 void HosESP8266ReadData(uint16_t page_number)
 {
+    /* Receive Page */
     printf_P(PSTR("FRPG=%d\r\n"), page_number);
-
     for(uint16_t i = 0; i < SPM_PAGESIZE; i++) {
         buffer[i] = HosSerialRX();
     }
@@ -144,6 +154,29 @@ uint8_t _HosLoadProgramFromESP8266(uint16_t rem_crc)
 
   return 0;
 }
+
+//------------------------------------------------------------------------------
+
+uint8_t _HosMainRunUpdate()
+{
+    uint16_t rem_crc;
+
+    if((rem_crc = HosESP8266NeedUpdate()) > 0) {
+      LED_OFF();
+      if(_HosLoadProgramFromESP8266(rem_crc)) {
+        // conf.flash_lock = BOOTLOADER_LOCK_VALUE;
+        // _HosSaveConfig();
+        HosRebootCPU();
+        asm volatile("jmp 0x0000" ::);
+      }  else {
+        HosRebootCPU();
+        return 0;
+      }
+   }
+
+   return 1;
+}
+
 #endif
 
 //------------------------------------------------------------------------------
@@ -154,56 +187,8 @@ void _HosSaveConfig(void)
   eeprom_update_block(&conf, (void*)&eemem_conf, sizeof(hos_config_perm));
 }
 
-//------------------------------------------------------------------------------
-
-void _HosMainRunUpdate()
-{
-    uint16_t rem_crc;
-
-    if((rem_crc = HosESP8266NeedUpdate()) > 0) {
-      LED_OFF();
-      if(_HosLoadProgramFromESP8266(rem_crc)) {
-        conf.flash_lock = BOOTLOADER_LOCK_VALUE;
-        _HosSaveConfig();
-        HosRebootCPU();
-        asm volatile("jmp 0x0000" ::);
-      }  else {
-        HosRebootCPU();
-      }
-  }
-}
 
 //------------------------------------------------------------------------------
-
-void HosMainRunLoop(void) 
-{
-  int16_t ret = 0;
-  static char command[HOS_SHELL_MAX_CMD_LENGTH + 1];
-  uint8_t i = 0;
-  uint16_t rem_crc;
-
-  LED_ON();
-
-  while(1) {
-    ret = fgetc(stdin);
-    if(ret == 0 || ret == '\r') continue;
-    if(ret == ':') {
-        i = 0; continue;
-    }
-
-    if(ret != '\n' && i < HOS_SHELL_MAX_CMD_LENGTH) {
-      command[i++] = ret; 
-    } else {
-      command[i] = 0;
-      i = 0;
-      // _HosEspExecute(command);
-
-      if(strcasecmp_P(command, PSTR("uuu")) == 0) {
-        _HosMainRunUpdate();
-      }
-    }
-  }
-}
 
 /**
  * Initialize Device
@@ -217,7 +202,7 @@ void HosInitDevice(void)
     /* Reset watchdog */
     wdt_reset(); 
     
-    
+#if defined(ALLOW_24CXX) || defined(ALLOW_WIFI) 
     /* Read config block from EEPROM */
     eeprom_read_block(&conf, (const void*)&eemem_conf, sizeof(hos_config_perm));
     
@@ -228,7 +213,8 @@ void HosInitDevice(void)
     conf.number_of_boot += 1;
     conf.mcusr = MCUSR;
     _HosSaveConfig();
-		
+#endif
+
     /* Disable watchdog */
     /*     MCUSR  &= ~(1 << WDRF);  */
     MCUSR &= ~(1 << WDRF) & ~(1 << BORF) & ~(1 << EXTRF) & ~(1 << PORF);
@@ -286,7 +272,7 @@ int main(void)
 
     /* Initialize Device */
     HosInitDevice();
-    
+    LED_ON();
     _delay_ms(1500); /* Wait for primary CPU to boot */
     printf_P(PSTR("VER=%c.%c\r\n"), BOOTLOADER_VERSION_MAJOR, BOOTLOADER_VERSION_MINOR);
 
@@ -306,16 +292,24 @@ int main(void)
     }
 #endif
 
+#if defined(ALLOW_ESP8266_UART)
+tryagain:
+  if(_HosMainRunUpdate()) { /* Wiat for about 3sec to check if there is any update. Otherwise run firmware */
+    asm volatile("jmp 0x0000" ::);
+  } else {
+    goto tryagain;
+  }
+#else
     /* If bit is set start application otherwise start bootloader code */
     if(conf.flash_lock == BOOTLOADER_LOCK_VALUE) {
         asm volatile("jmp 0x0000" ::);
     } 
-
-#if defined(ALLOW_ESP8266_UART)
-    else if(conf.flash_lock == BOOTLOADER_ESP8266_UART_LOAD_VALUE) {
-      _HosMainRunUpdate();
-    }
 #endif
+// #if defined(ALLOW_ESP8266_UART)
+//     else if(conf.flash_lock == BOOTLOADER_ESP8266_UART_LOAD_VALUE) {
+//       _HosMainRunUpdate();
+//     }
+// #endif
 
 #if defined(ALLOW_24CXX)
     else if(conf.flash_lock == BOOTLOADER_EEPROM_LOAD_VALUE) {
@@ -336,13 +330,10 @@ int main(void)
     }
 #endif
       
-dfu:
 
-#if defined(ALLOW_ESP8266_UART)
-  HosMainRunLoop();
-#endif
     
 #if defined(ALLOW_WIFI)
+dfu:
     /* Start bootloader */
     HosEspRunLoop();
 #endif

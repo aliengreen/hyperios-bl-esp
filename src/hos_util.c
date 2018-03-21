@@ -134,6 +134,8 @@ uint16_t HosUdsCRC16(uint8_t *data, uint16_t length, uint16_t crc)
     return crc;
 }
 
+// ------------------------------------------------------------------
+
 void hexDump (char *desc, void *addr, int len) 
 {
     int i;
@@ -186,3 +188,5 @@ void hexDump (char *desc, void *addr, int len)
     // And print the final ASCII bit.
     printf_P (PSTR("  %s\n"), buff);
 }
+
+// ------------------------------------------------------------------

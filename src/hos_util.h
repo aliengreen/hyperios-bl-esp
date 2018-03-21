@@ -29,7 +29,6 @@
 #include "config.h"
 
 
-
 #define _B2048          // boot size is 2048 words (4096 bytes) Don't change !
 
 #define BOOTLOADER_LOCK_VALUE                        253
