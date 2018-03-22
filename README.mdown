@@ -19,13 +19,7 @@ If first received character is colon punctuation `:` character followed by 2 byt
 > Note: The firmware starts immediately if received colon punctuation `:` with zero checksum.
 
 
-## Configuration
-
-Before you start, make sure you have the configuration
-
-
-
-### build.xml
+## build.xml
 
 For build script we use standard ant build file `build.xml`. There are 2 file for Mostat REVA board with filename `build-old-reva.xml` and REVB with filename `build-new-revb.xml`.
 
