@@ -1,24 +1,25 @@
 /*
  *	hos_util.c
  *
- *	Copyright (c) 2017 Picktek LLC
+ *  Copyright (c) 2018 Alien Green LLC
  *
- *	This file is part of Hyperios.
+ *  This file is part of Hyperios.
  *
- *	Hyperios is free software: you can redistribute it and/or modify
- *	it under the terms of the GNU General Public License as published by
- *	the Free Software Foundation, either version 3 of the License, or
- *	(at your option) any later version.
+ *  Hyperios is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- *	Hyperios is distributed in the hope that it will be useful,
- *	but WITHOUT ANY WARRANTY; without even the implied warranty of
- *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *	GNU General Public License for more details.
+ *  Hyperios is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
  *
- *	You should have received a copy of the GNU General Public License
- *	along with Hyperios.  If not, see <http://www.gnu.org/licenses/>.
+ *  You should have received a copy of the GNU General Public License
+ *  along with Hyperios.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <stdio.h>
 #include <avr/interrupt.h>
 #include <avr/boot.h> 
 #include <util/delay.h>
@@ -75,25 +76,26 @@ void HosSerialInit(void)
 
 // ------------------------------------------------------------------
 
-void HosSerialTX(uint8_t b) 
+int HosSerialTX(char b, FILE *stream)
 { 
    while (!(myUCSRA & (1<<myUDRE)));   // Wait for empty transmit buffer 
    myUDR = b;   // send byte 
+
+   return myUDR;
 } 
 
 // ------------------------------------------------------------------
 
-uint8_t HosSerialRX(void) 
+int HosSerialRX(FILE *stream)
 { 
-   while (!(myUCSRA & (1<<myRXC))); 
-   return myUDR;                     // Get byte 
+  while (!(myUCSRA & (1<<myRXC)));
+  return myUDR;                     // Get byte 
 } 
 
 // ------------------------------------------------------------------
 
 void HosLedBlink(uint8_t count) 
 {
-
     for(uint8_t i = 0; i < count; i++) {
       LED_ON();
       _delay_ms(200);
