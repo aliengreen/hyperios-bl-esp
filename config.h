@@ -30,9 +30,6 @@
 /* Boot size is 2048 words (4096 bytes) Don't change ! */
 #define _B2048    
 
-/* Baud rate for ESP8266 Wi-Fi module */
-#define BAUDRATE                  19200
-
 /* Boot version */
 #define BOOTLOADER_VERSION_MAJOR  '0'
 #define BOOTLOADER_VERSION_MINOR  '1'
