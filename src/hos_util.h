@@ -34,6 +34,7 @@ int HosSerialTX(char b, FILE *stream);
 int HosSerialRX(FILE *stream);
 void HosLedBlink(uint8_t count);
 void HosRebootCPU();
+uint8_t HosEspIsEmptyApp();
 void HosEspEraseProgramSpace(void);
 uint16_t HosEspWriteProgramPage(uint8_t *buffer, uint16_t address);
 uint16_t HosUdsCRC16(uint8_t *data, uint16_t length, uint16_t crc);

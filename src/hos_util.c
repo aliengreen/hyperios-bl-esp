@@ -30,9 +30,16 @@
 
 // ------------------------------------------------------------------
 
+uint8_t HosEspIsEmptyApp()
+{
+  return (pgm_read_byte(0) == 0xFF);
+}
+
+// ------------------------------------------------------------------
+
 void HosEspEraseProgramSpace(void) 
 {
-    uint16_t address = 0; 
+    uint16_t address = 0;
 
     /* Erase application flash section */
     cli();
@@ -48,14 +55,14 @@ void HosEspEraseProgramSpace(void)
 
 uint16_t HosEspWriteProgramPage(uint8_t *buffer, uint16_t address)
 {
-   uint16_t mem_data;  
+   uint16_t mem_data;
 
-   for(uint8_t i = 0; i < SPM_PAGESIZE;) { 
+   for(uint8_t i = 0; i < SPM_PAGESIZE;) {
       mem_data = buffer[i++]; 
       mem_data |= (buffer[i++] << 8); 
       boot_page_fill(address, mem_data); 
       address += 2; 
-   } 
+   }
 
    boot_page_write(address - SPM_PAGESIZE);   // write to flash 
    boot_spm_busy_wait();    

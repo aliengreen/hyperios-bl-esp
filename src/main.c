@@ -37,15 +37,15 @@ static FILE mystdout = FDEV_SETUP_STREAM(HosSerialTX, HosSerialRX, _FDEV_SETUP_R
                                          
 //------------------------------------------------------------------------------
 
-uint16_t HosESP8266NeedUpdate()
+uint16_t HosESP8266NeedUpdate(uint8_t force)
 {
     uint8_t tmp[sizeof(uint16_t)];
     uint16_t rem_crc = 0;
     uint32_t i = 0;
     
-    printf_P(PSTR("FCHK=1\r\n"));
+    printf_P(PSTR("FCHK=%d\r\n"), force);
 
-    /* Weit for colon punctuation to receive checksum */
+    /* Wait for colon punctuation to receive checksum */
     wdt_enable(WDTO_8S);
     while(getchar() != ':');
     // wdt_disable();
@@ -114,7 +114,7 @@ uint8_t _HosMainRunUpdate()
 {
     uint16_t rem_crc;
 
-    if((rem_crc = HosESP8266NeedUpdate()) > 0) {
+    if((rem_crc = HosESP8266NeedUpdate(HosEspIsEmptyApp())) > 0) {
       LED_OFF();
       if(HosLoadProgramFromESP8266(rem_crc)) {
         HosRebootCPU();
@@ -192,7 +192,15 @@ int main(void)
   while(TRUE) {
     /* Wiat for about 3sec to check if there is any update. Otherwise run firmware */
     if(_HosMainRunUpdate()) { 
-      LED_OFF();
+      
+      for(int i = 0; i < 3; i++) {
+        
+        LED_OFF();
+        _delay_ms(100);
+        LED_ON();
+        _delay_ms(100); 
+      }
+
       asm volatile("jmp 0x0000" ::);
     } 
   }
