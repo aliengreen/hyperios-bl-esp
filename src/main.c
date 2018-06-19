@@ -120,7 +120,8 @@ uint8_t _HosMainRunUpdate()
         HosRebootCPU();
         asm volatile("jmp 0x0000" ::);
       }  else {
-        HosRebootCPU();
+        // HosRebootCPU();
+        _delay_ms(1000);
         return FALSE;
       }
    }
@@ -190,7 +191,8 @@ int main(void)
   printf_P(PSTR("VER=%c.%c\r\n"), BOOTLOADER_VERSION_MAJOR, BOOTLOADER_VERSION_MINOR);
 
   while(TRUE) {
-    /* Wiat for about 3sec to check if there is any update. Otherwise run firmware */
+
+    /* Wait for about 3sec to check if there is any update. Otherwise run firmware */
     if(_HosMainRunUpdate()) { 
       
       for(int i = 0; i < 3; i++) {
