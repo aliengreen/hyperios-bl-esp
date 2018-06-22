@@ -47,7 +47,7 @@ uint16_t HosESP8266NeedUpdate(uint8_t force)
 
     /* Wait for colon punctuation to receive checksum */
     wdt_enable(WDTO_8S);
-    while(getchar() != ':');
+    while(getchar() != 0xFD);
     // wdt_disable();
 
     /* Receive Checksum */
