@@ -27,14 +27,14 @@
 #include <avr/eeprom.h>
 #include <util/delay.h>
 
-#include "config.h" 
+#include "config.h"
 #include "hos_util.h"
 
 uint8_t buffer[SPM_PAGESIZE];
 uint16_t crc = 0xFFFF;
 
 static FILE mystdout = FDEV_SETUP_STREAM(HosSerialTX, HosSerialRX, _FDEV_SETUP_RW);
-                                         
+
 //------------------------------------------------------------------------------
 
 uint16_t HosESP8266NeedUpdate(uint8_t force)
@@ -42,10 +42,10 @@ uint16_t HosESP8266NeedUpdate(uint8_t force)
     uint8_t tmp[sizeof(uint16_t)];
     uint16_t rem_crc = 0;
     uint32_t i = 0;
-    
+
     printf_P(PSTR("FCHK=%d\r\n"), force);
 
-    /* Wait for colon punctuation to receive checksum */
+    /* Wait for 0xFD to receive checksum */
     wdt_enable(WDTO_8S);
     while(getchar() != 0xFD);
     // wdt_disable();
@@ -79,29 +79,39 @@ void HosESP8266ReadData(uint16_t page_number)
 
 uint8_t HosLoadProgramFromESP8266(uint16_t rem_crc)
 {
-    uint16_t address = 0; 
+    uint16_t address = 0;
 
     wdt_disable();
-    
+
     /* Erase application flash section */
     HosEspEraseProgramSpace();
     crc = 0xFFFF;
     /* ------------------------------- */
 
+  
     for(uint16_t n = 0; n < HOS_FIRMWARE_TOTAL_IMAGE_SECTOR_COUNT; n++) {
       LED_OFF();
       _delay_ms(1);
+      // wdt_enable(WDTO_8S);
       HosESP8266ReadData(n);
       address = HosEspWriteProgramPage(buffer, address);
+      // wdt_disable();
       LED_ON();
       _delay_ms(1);
     }
 
     // printf_P(PSTR("%u=%u\r\n"), rem_crc, crc);
-    if(rem_crc == crc) {      
-      HosLedBlink(2); /* We update success */
+    if(rem_crc == crc) { /* We update success */
+      HosLedBlink(2);
+
+      /* Let notify master MCU that we updated firmware successfully */
+      printf_P(PSTR("FCHK=%d\r\n"), 2);
+      _delay_ms(2000);
       return TRUE;
     } else {
+      /* Let notify master MCU that firmware update failed */
+      printf_P(PSTR("FCHK=%d\r\n"), 3);
+      _delay_ms(2000);
       HosLedBlink(5); /* Update faild */
     }
 
@@ -135,46 +145,46 @@ uint8_t _HosMainRunUpdate()
  * Initialize Device
  *
  */
-void HosInitDevice(void) 
-{    
+void HosInitDevice(void)
+{
     /* Disable global interrupt */
     cli();
-	    
+
     /* Reset watchdog */
-    wdt_reset(); 
+    wdt_reset();
 
     /* Disable watchdog */
     /*     MCUSR  &= ~(1 << WDRF);  */
     MCUSR &= ~(1 << WDRF) & ~(1 << BORF) & ~(1 << EXTRF) & ~(1 << PORF);
-    WDTCSR |= (1 << WDCE) | (1 << WDE); 
-    WDTCSR  = 0x00; 
+    WDTCSR |= (1 << WDCE) | (1 << WDE);
+    WDTCSR  = 0x00;
 
 
 #if defined(WIFI_RESET_PORT)
     /* Set 'Wireless' Reset pin as digital output */
-    WIFI_RESET_DDR |= _BV (WIFI_RESET_PIN); 
-    
+    WIFI_RESET_DDR |= _BV (WIFI_RESET_PIN);
+
     // -- Config transmitter
     WIFI_RESET_PORT |= _BV(WIFI_RESET_PIN);  // Set high Reset pin
 #endif
 
-#if defined(LED_OUTPUT_PORT) 
+#if defined(LED_OUTPUT_PORT)
     /* Set 'LED' pin as digital output */
     LED_OUTPUT_DDR |= _BV(LED_OUTPUT_PIN);
     LED_OFF();
-#endif    
+#endif
 
-    // Serial Init 
+    // Serial Init
     HosSerialInit();
 }
 
 //------------------------------------------------------------------------------
 
-int main(void) 
+int main(void)
 {
  /*
-  * Open STD for terminal output         
-  * Assign to default Standard IO facilities -> stdin,stdout,stderr 
+  * Open STD for terminal output
+  * Assign to default Standard IO facilities -> stdin,stdout,stderr
   */
   stdout = stdin = stderr = &mystdout;
 
@@ -185,7 +195,7 @@ int main(void)
   LED_ON();
 
   /* Wait for primary CPU to boot */
-  _delay_ms(1800); 
+  _delay_ms(1800);
 
   /* Output in serial port bootloader version number */
   printf_P(PSTR("VER=%c.%c\r\n"), BOOTLOADER_VERSION_MAJOR, BOOTLOADER_VERSION_MINOR);
@@ -193,23 +203,21 @@ int main(void)
   while(TRUE) {
 
     /* Wait for about 3sec to check if there is any update. Otherwise run firmware */
-    if(_HosMainRunUpdate()) { 
-      
+    if(_HosMainRunUpdate()) {
+
       for(int i = 0; i < 3; i++) {
-        
+
         LED_OFF();
         _delay_ms(100);
         LED_ON();
-        _delay_ms(100); 
+        _delay_ms(100);
       }
 
       asm volatile("jmp 0x0000" ::);
-    } 
+    }
   }
 
-  return 0; 
+  return 0;
 }
 
 //------------------------------------------------------------------------------
-
-
