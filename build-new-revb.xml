@@ -4,7 +4,7 @@
     <property name="configuration" value="bootloader_b"/>
     <property name="mcu" value="atmega328p"/>
     <property name="f_cpu" value="8000000UL"/>
-    <property name="f_baudrate" value="19200"/>
+    <property name="f_baudrate" value="500000"/>
     <property name="avrdude_bitclock" value="3"/>
     <property name="sectionstart" value="0x7000"/>
     <property name="board_rev" value="B"/>

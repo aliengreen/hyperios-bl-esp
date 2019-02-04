@@ -5,6 +5,8 @@ var YAML = require('yamljs');
 var yargs = require('yargs')
 var readline = require('readline');
 var serial = require('./serial.js');
+var socket = require('./socket.js');
+var bridge = undefined;
 var bl = require('./bl.js');
 
 var argv = yargs.usage('Hyperios serial bootloader for AVR')
@@ -34,14 +36,29 @@ try {
 
 var rl = readline.createInterface(process.stdin, process.stdout);
 yargs.showHelp();
-console.log(`dev: ${cfgFile.device.serial_port}`);
-console.log(`bps: ${cfgFile.device.baudrate}`);
 console.log(`firmware: ${cfgFile.device.firmware}`);
-serial.create(cfgFile.device.serial_port, cfgFile.device.baudrate, initSerial, deInitSerial, processPacket);
+
+if(cfgFile.device.serial_port !== undefined) {
+  console.log(`dev: ${cfgFile.device.serial_port}`);
+  console.log(`bps: ${cfgFile.device.baudrate}`);
+  serial.create(cfgFile.device.serial_port, cfgFile.device.baudrate, initSerial, deInitSerial, processPacket);
+  bridge = serial;
+} else if(cfgFile.device.host !== undefined) {
+  console.log(`host: ${cfgFile.device.host}`);
+  console.log(`port: ${cfgFile.device.port}`);
+  socket.create(cfgFile.device.host, cfgFile.device.port, initSerial, deInitSerial, processPacket);
+  bridge = socket;
+} else {
+  console.log('Invalid configuration file, please specify serial port for remote host');
+  process.exit(1);
+}
+
+//
+
 
 
 try {
-  serial.start();
+  bridge.start();
   bl.firmware(cfgFile.device.firmware);
 } catch (e) {
   console.log(e.message);
@@ -57,15 +74,15 @@ function deInitSerial() {
 }
 
 function processPacket() {
-  serial.unlock();
-  var ret = bl.process(serial.incomingData(), serial);
+  bridge.unlock();
+  var ret = bl.process(bridge.incomingData(), bridge);
   if(ret == 2) {
     console.log('Firmware updated successfully');
-    serial.stop();
+    bridge.stop();
     process.exit(0);
   } else if(ret == 3) {
     console.log('Error while updating firmware');
-    serial.stop();
+    bridge.stop();
     process.exit(1);
   }
 }

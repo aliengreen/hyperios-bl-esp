@@ -1,5 +1,6 @@
 device:
     serial_port: /dev/cu.usbserial-A6007Whc
     baudrate: 500000
-    firmware: MostatPowerAddon-8Mhz.bin
-
+    host: 192.168.1.23
+    port: 23
+    firmware: bin/MostatPowerAddonM-8Mhz.bin

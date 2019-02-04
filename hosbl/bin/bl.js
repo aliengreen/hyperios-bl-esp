@@ -46,7 +46,7 @@ var mySingleton = (function() {
 
           if(param[0] == 'FCHK') {
               var num = parseInt(param[1]);
-              if(num == 2) {         
+              if(num == 2) {
                 return num;
               } else if(num == 3) {
                 return num;
@@ -61,9 +61,9 @@ var mySingleton = (function() {
                 var pg = frmb.slice(p * pageSize, (p + 1) * pageSize);
                 serial.send(pg);
                 bar.tick();
-            } 
+            }
 
-          } 
+          }
         }
 
         return 1;
