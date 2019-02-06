@@ -40,8 +40,8 @@ console.log(`firmware: ${cfgFile.device.firmware}`);
 
 if(cfgFile.device.serial_port !== undefined) {
   console.log(`dev: ${cfgFile.device.serial_port}`);
-  console.log(`bps: ${cfgFile.device.baudrate}`);
-  serial.create(cfgFile.device.serial_port, cfgFile.device.baudrate, initSerial, deInitSerial, processPacket);
+  console.log(`bps: ${cfgFile.device.baud_rate}`);
+  serial.create(cfgFile.device.serial_port, cfgFile.device.baud_rate, initSerial, deInitSerial, processPacket);
   bridge = serial;
 } else if(cfgFile.device.host !== undefined) {
   console.log(`host: ${cfgFile.device.host}`);

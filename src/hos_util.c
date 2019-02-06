@@ -21,7 +21,7 @@
 
 #include <stdio.h>
 #include <avr/interrupt.h>
-#include <avr/boot.h> 
+#include <avr/boot.h>
 #include <util/delay.h>
 #include <avr/pgmspace.h>
 
@@ -37,7 +37,7 @@ uint8_t HosEspIsEmptyApp()
 
 // ------------------------------------------------------------------
 
-void HosEspEraseProgramSpace(void) 
+void HosEspEraseProgramSpace(void)
 {
     uint16_t address = 0;
 
@@ -48,7 +48,7 @@ void HosEspEraseProgramSpace(void)
         boot_spm_busy_wait();        // wait until the memory is erased.
         address += SPM_PAGESIZE;
     }
-    sei();  
+    sei();
 }
 
 // ------------------------------------------------------------------
@@ -58,14 +58,14 @@ uint16_t HosEspWriteProgramPage(uint8_t *buffer, uint16_t address)
    uint16_t mem_data;
 
    for(uint8_t i = 0; i < SPM_PAGESIZE;) {
-      mem_data = buffer[i++]; 
-      mem_data |= (buffer[i++] << 8); 
-      boot_page_fill(address, mem_data); 
-      address += 2; 
+      mem_data = buffer[i++];
+      mem_data |= (buffer[i++] << 8);
+      boot_page_fill(address, mem_data);
+      address += 2;
    }
 
-   boot_page_write(address - SPM_PAGESIZE);   // write to flash 
-   boot_spm_busy_wait();    
+   boot_page_write(address - SPM_PAGESIZE);   // write to flash
+   boot_spm_busy_wait();
    boot_rww_enable();         // we-enable the RWW section
 
    return address;
@@ -73,35 +73,35 @@ uint16_t HosEspWriteProgramPage(uint8_t *buffer, uint16_t address)
 
 // ------------------------------------------------------------------
 
-void HosSerialInit(void) 
-{ 
+void HosSerialInit(void)
+{
     myUBRRH = (F_CPU / (BAUDRATE * 16L) - 1) >> 8;       // calculate baudrate and set high byte
     myUBRRL = (uint8_t)(F_CPU / (BAUDRATE * 16L) - 1);   // and low byte
-    myUCSRB = _BV(myTXEN) | _BV(myRXEN);                 // enable transmitter and receiver and receiver interrupt  
+    myUCSRB = _BV(myTXEN) | _BV(myRXEN);                 // enable transmitter and receiver and receiver interrupt
     myUCSRC = myURSEL | _BV(myUCSZ1) | _BV(myUCSZ0);     // 8 bit character size, 1 stop bit, no parity
 }
 
 // ------------------------------------------------------------------
 
 int HosSerialTX(char b, FILE *stream)
-{ 
-   while (!(myUCSRA & (1<<myUDRE)));   // Wait for empty transmit buffer 
-   myUDR = b;   // send byte 
+{
+   while (!(myUCSRA & (1<<myUDRE)));   // Wait for empty transmit buffer
+   myUDR = b;   // send byte
 
    return myUDR;
-} 
+}
 
 // ------------------------------------------------------------------
 
 int HosSerialRX(FILE *stream)
-{ 
+{
   while (!(myUCSRA & (1<<myRXC)));
-  return myUDR;                     // Get byte 
-} 
+  return myUDR;                     // Get byte
+}
 
 // ------------------------------------------------------------------
 
-void HosLedBlink(uint8_t count) 
+void HosLedBlink(uint8_t count)
 {
     for(uint8_t i = 0; i < count; i++) {
       LED_ON();
@@ -145,7 +145,7 @@ uint16_t HosUdsCRC16(uint8_t *data, uint16_t length, uint16_t crc)
 
 // ------------------------------------------------------------------
 
-void hexDump (char *desc, void *addr, int len) 
+void hexDump (char *desc, void *addr, int len)
 {
     int i;
     unsigned char buff[17];

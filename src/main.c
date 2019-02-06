@@ -42,12 +42,25 @@ uint16_t HosESP8266NeedUpdate(uint8_t force)
     uint8_t tmp[sizeof(uint16_t)];
     uint16_t rem_crc = 0;
     uint32_t i = 0;
+    uint8_t need_update = FALSE;
 
     printf_P(PSTR("FCHK=%d\r\n"), force);
 
     /* Wait for 0xFD to receive checksum */
     wdt_enable(WDTO_8S);
-    while(getchar() != 0xFD);
+    for( i = 0; i < 1000; i++) {
+      _delay_ms(1);
+      if((myUCSRA & (1 << myRXC))) {
+        if(myUDR == 0xFD) {
+          need_update = TRUE;
+          break;
+        }
+      }
+    }
+
+    if(!need_update) {
+      return 0;
+    }
     // wdt_disable();
 
     /* Receive Checksum */
@@ -88,7 +101,7 @@ uint8_t HosLoadProgramFromESP8266(uint16_t rem_crc)
     crc = 0xFFFF;
     /* ------------------------------- */
 
-  
+
     for(uint16_t n = 0; n < HOS_FIRMWARE_TOTAL_IMAGE_SECTOR_COUNT; n++) {
       LED_OFF();
       _delay_ms(1);
