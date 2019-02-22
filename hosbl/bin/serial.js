@@ -36,7 +36,7 @@ var mySingleton = (function () {
                   if(!incomingDataLock) {
                     incomingDataLock = true;
                     incomingData = new Buffer(data)
-                    setTimeout(recvCB, 80);
+                    setTimeout(recvCB, 10);
                   } else {
                     incomingData = Buffer.concat([incomingData, new Buffer(data)]);
                   }

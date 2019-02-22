@@ -25,13 +25,13 @@ var mySingleton = (function () {
             create: (host, port, openCB, closeCB, recvCB) => {
 
               client.connect(port, host, function() {
-              	console.log('Connected');
+              	console.log('Connected', host, port);
                 openCB();
                   client.on('data', function(data) {
                     if(!incomingDataLock) {
                       incomingDataLock = true;
                       incomingData = new Buffer(data)
-                      setTimeout(recvCB, 10);
+                      setTimeout(recvCB, 80);
                     } else {
                       incomingData = Buffer.concat([incomingData, new Buffer(data)]);
                     }

@@ -1,7 +1,7 @@
 HyperiOS AVR Bootloader
 ========
 
-This is AVR MCU boot-loader for Mostat project (AVR MCU firmware you can find [here](http://github.com/aliengreen/hyperios-mostat)). The bootloader is just a normal AVR MCU application that is located in a special region of flash memory. 
+This is AVR MCU boot-loader for Mostat project (AVR MCU firmware you can find [here](http://github.com/aliengreen/hyperios-mostat)). The bootloader is just a normal AVR MCU application that is located in a special region of flash memory.
 
 For getting firmware into the AVR MCU we using primary CPU ESP8266 SPI flash through UART, you need special firmware in ESP8266 in order to update AVR MCU. We implemented a simple custom protocol to upload firmware from ESP8266 UART protocol.
 
@@ -14,9 +14,9 @@ Before you upload bootloader always better to set the BOOTRST fuse to run the bo
 ## How it works
 
 After device reset or first start the bootloader transmits `FCHK=1<CR>` command in UART channel.
-If first received character is colon punctuation `:` character followed by 2 byte [CRC16-CCITT](http://automationwiki.com/index.php/CRC-16-CCITT) checksum the device enter in programing mode. If no input is received within 8 seconds or it received colon punctuation `:` with zero checksum then the device not enter programming mode and resumes normal operation.
+If first received character `0xFD` character followed by 2 byte [CRC16-CCITT](http://automationwiki.com/index.php/CRC-16-CCITT) checksum the device enter in programing mode. If no input is received within 8 seconds or it received `0xFD` with zero checksum then the device not enter programming mode and resumes normal operation.
 
-> Note: The firmware starts immediately if received colon punctuation `:` with zero checksum.
+> Note: The firmware starts immediately if received `0xFD` with zero checksum.
 
 
 ## build.xml
@@ -44,7 +44,7 @@ In this files you can configure 9 parameters: MCU family, crystal frequency, bau
 - `sectionstart` property value boot flash section start address. We use 4kb bootloader size, for atmega328P this value will be `0x7000`
 - `board_rev` property can be one of the value 'A' or 'B' it depends on board revision.
 - `l`,`h`,`e` properties is a AVR FUSES.
- 
+
 > In most cases you don't need to change default baud rate `BAUDRATE   19200`, but make sure to configure your ESP8266 WI-FI module for `19200` baud rate in order to work correctly. You also need special firmware loaded in ESP8266.
 
 
@@ -73,20 +73,20 @@ fields show the actual hexadecimal representation of fuses, These are the values
 For more information about FUSES calculator and actual values see [Engbedded Atmel AVR® Fuse Calculator](http://www.engbedded.com/fusecalc/)
 
 
-## Upload 
+## Upload
 
 For programming AVR micro-controllers you need AVR programmer STK500 or similar, next you will use the `avrdude` software to upload binary `.hex` file to the chip.
 
-Under MacOS X, we can use the Terminal program to pull up a command line interface. 
+Under MacOS X, we can use the Terminal program to pull up a command line interface.
 
 First get your AVR target board ready to go. Connect your board to the USB programmer and run:
 
-`ant -f build-*.xml all up` 
+`ant -f build-*.xml all up`
 
 If all goes well, you should see similar output:
-	
+
 	Buildfile: /Users/..../MyProjects/hyperios-os/build.xml
-	
+
 	up:
 	     [echo] Upload to '/dev/cu.usbmodem14511' device MCU family 'atmega328p' clock '8000000UL'
 
@@ -110,4 +110,3 @@ Resources
 -----------
 
 - [Engbedded Atmel AVR® Fuse Calculator](http://www.engbedded.com/fusecalc/)
-
